@@ -8,4 +8,9 @@
     <string name="today_degrees_day_night">20 / 18</string>
     <string name="tomorrow_degrees_day_night">17 / 15</string>
     <string name="forecast_tomorrow">Rain</string>
+    <string name="enter_city_name">City:</string>
+    <string name="checkbox_wind_speed">Wind Speed</string>
+    <string name="pressure">Pressure</string>
+    <string name="second_city_button">Saint-Petersburg</string>
+    <string name="third_city_button">New York</string>
 </resources>
