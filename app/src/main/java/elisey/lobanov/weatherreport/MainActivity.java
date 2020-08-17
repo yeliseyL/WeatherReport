@@ -14,19 +14,13 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Button citySelectBtn = findViewById(R.id.button);
+        Button citySelectBtn = findViewById(R.id.button4);
 
         citySelectBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent());
+                startActivity(new Intent(getApplicationContext(), CitySelectionActivity.class));
             }
         });
     }
-
-
-
-
-
-
 }

@@ -13,4 +13,5 @@
     <string name="pressure">Pressure</string>
     <string name="second_city_button">Saint-Petersburg</string>
     <string name="third_city_button">New York</string>
+    <string name="select_city_btn_text_main_act">Choose another city</string>
 </resources>
