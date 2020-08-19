@@ -14,4 +14,7 @@
     <string name="second_city_button">Saint-Petersburg</string>
     <string name="third_city_button">New York</string>
     <string name="select_city_btn_text_main_act">Choose another city</string>
+    <string name="atm_pressure">Pressure: 745 mm</string>
+    <string name="wind_speed">Wind: 5 m/s</string>
+    <string name="chooseCityApplyBtnText">Apply</string>
 </resources>
