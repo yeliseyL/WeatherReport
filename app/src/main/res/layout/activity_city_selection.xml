@@ -129,14 +129,12 @@
 
     <Button
         android:id="@+id/chooseCityApplyBtn"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:background="#005A97B3"
-        android:text="@string/chooseCityApplyBtnText"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:background="@drawable/ic_baseline_check_circle_24"
         android:textColor="@android:color/secondary_text_light"
         app:layout_constraintBottom_toBottomOf="@+id/imageView4"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/guideline3"
         app:layout_constraintTop_toBottomOf="@+id/button3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

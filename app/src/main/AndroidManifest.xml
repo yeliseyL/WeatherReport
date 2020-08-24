@@ -9,8 +9,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".CitySelectionActivity"></activity>
-        <activity android:name=".MainActivity">
+        <activity android:name=".CitySelectionActivity" android:theme="@style/AppTheme.ActionBar.Transparent"></activity>
+        <activity android:name=".MainActivity" android:theme="@style/AppTheme.ActionBar.Transparent">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
