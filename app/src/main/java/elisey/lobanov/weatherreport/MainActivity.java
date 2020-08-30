@@ -24,14 +24,11 @@ public class MainActivity extends AppCompatActivity implements Constants{
         setContentView(R.layout.activity_main);
         setTitle("Weather Report");
 
-        CityChooserParcel parcel = new CityChooserParcel("Moscow", false, false);
+        CityChooserParcel parcel = CityChooserParcel.getInstance();
 
         Fragment fragmentMain = MainFragment.create(parcel);
-        Fragment fragmentCityChooser = CityChooserFragment.create(parcel);
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
-        fragmentTransaction.add(R.id.main_container, fragmentMain)
-                .addToBackStack(null)
+        fragmentTransaction.replace(R.id.main_container, fragmentMain)
                 .commit();
-
     }
 }

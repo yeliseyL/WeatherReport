@@ -28,6 +28,9 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     private TextView cityName;
     private TextView windSpeedTextView;
     private TextView atmPressureTextView;
+    private String cityNameText;
+    private boolean isWindSpeedTextView;
+    private boolean isAtmPressureTextView;
     boolean isLandscapeOrientation;
 
     public static MainFragment create(CityChooserParcel parcel) {
@@ -61,18 +64,27 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         final Fragment fragment = CityChooserFragment.create(parcel);
         ((CityChooserFragment) fragment).setFragmentCallback(this);
 
-        citySelectBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-                if (!isLandscapeOrientation) {
-                    ft.add(R.id.main_container, fragment);
-                    ft.addToBackStack(null);
-                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                    ft.commit();
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            citySelectBtn.setVisibility(View.GONE);
+            FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
+            fragmentTransaction.replace(R.id.city_chooser_container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        } else {
+            citySelectBtn.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+                    if (!isLandscapeOrientation) {
+                        ft.add(R.id.main_container, fragment);
+                        ft.addToBackStack(null);
+                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                        ft.commit();
+                    }
                 }
-            }
-        });
+            });
+        }
+
 
         infoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -95,15 +107,19 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
 
     @Override
     public void refreshInfo(CityChooserParcel parcel) {
-        this.cityName.setText(parcel.getCityName());
+        cityNameText = parcel.getCityName();
+        isWindSpeedTextView = parcel.isWindSpeedVisible();
+        isAtmPressureTextView = parcel.isPressureVisible();
 
-        if (parcel.isWindSpeedVisible()) {
+        this.cityName.setText(cityNameText);
+
+        if (isWindSpeedTextView) {
             windSpeedTextView.setVisibility(View.VISIBLE);
         } else {
             windSpeedTextView.setVisibility(View.GONE);
         }
 
-        if (parcel.isPressureVisible()) {
+        if (isAtmPressureTextView) {
             atmPressureTextView.setVisibility(View.VISIBLE);
         } else {
             atmPressureTextView.setVisibility(View.GONE);

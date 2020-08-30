@@ -1,6 +1,7 @@
 package elisey.lobanov.weatherreport;
 
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -79,7 +80,9 @@ public class CityChooserFragment extends Fragment implements Constants {
                     fragmentCallback.refreshInfo(cityChooserParcel);
                 }
 
-                getActivity().getSupportFragmentManager().popBackStack();
+                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+                    getActivity().getSupportFragmentManager().popBackStack();
+                }
             }
         });
     }

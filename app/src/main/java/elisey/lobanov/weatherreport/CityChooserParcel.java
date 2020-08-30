@@ -3,14 +3,16 @@ package elisey.lobanov.weatherreport;
 import java.io.Serializable;
 
 public class CityChooserParcel implements Serializable {
+    private static CityChooserParcel instance = null;
+    private static final Object syncObj = new Object();
     private String cityName;
     private boolean isWindSpeedVisible;
     private boolean isPressureVisible;
 
-    public CityChooserParcel(String cityName, boolean isWindSpeedVisible, boolean isPressureVisible) {
-        this.cityName = cityName;
-        this.isWindSpeedVisible = isWindSpeedVisible;
-        this.isPressureVisible = isPressureVisible;
+    private CityChooserParcel() {
+        this.cityName = "Moscow";
+        this.isWindSpeedVisible = false;
+        this.isPressureVisible = false;
     }
 
     public String getCityName() {
@@ -35,5 +37,14 @@ public class CityChooserParcel implements Serializable {
 
     public void setPressureVisible(boolean pressureVisible) {
         isPressureVisible = pressureVisible;
+    }
+
+    public static CityChooserParcel getInstance(){
+        synchronized (syncObj) {
+            if (instance == null) {
+                instance = new CityChooserParcel();
+            }
+            return instance;
+        }
     }
 }
