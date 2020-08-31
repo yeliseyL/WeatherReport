@@ -10,6 +10,8 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 
 import android.view.LayoutInflater;
@@ -20,6 +22,8 @@ import android.widget.TextView;
 
 import java.io.FileDescriptor;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class MainFragment extends Fragment implements Constants, FragmentCallback {
@@ -33,6 +37,9 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     private boolean isAtmPressureTextView;
     boolean isLandscapeOrientation;
 
+    private String[] times;
+    private String[] timeTemps;
+
     public static MainFragment create(CityChooserParcel parcel) {
         MainFragment fragment = new MainFragment();
         Bundle args = new Bundle();
@@ -44,6 +51,7 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
     }
 
     @Override
@@ -52,6 +60,15 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
 
         parcel = (CityChooserParcel) getArguments().getSerializable(FIELDS);
+
+        times = getResources().getStringArray(R.array.time_array);
+        timeTemps = getResources().getStringArray(R.array.temp_array);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerViewMain);
+        recyclerView.setLayoutManager(layoutManager);
+        RecyclerViewAdapterMain adapter = new RecyclerViewAdapterMain(times, timeTemps);
+        recyclerView.setAdapter(adapter);
 
         final Button citySelectBtn = view.findViewById(R.id.button4);
         final Button infoBtn = view.findViewById(R.id.infoBtn);
@@ -125,4 +142,5 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             atmPressureTextView.setVisibility(View.GONE);
         }
     }
+
 }

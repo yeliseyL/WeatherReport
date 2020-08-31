@@ -46,13 +46,13 @@
         android:id="@+id/textView4"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="200dp"
+        android:layout_marginTop="72dp"
         android:text="@string/today"
         android:textAlignment="center"
         android:textColor="#CDFFFFFF"
         android:textSize="18sp"
         app:layout_constraintStart_toStartOf="@+id/guideline2"
-        app:layout_constraintTop_toBottomOf="@+id/textView" />
+        app:layout_constraintTop_toBottomOf="@+id/recyclerViewMain" />
 
     <TextView
         android:id="@+id/textView8"
@@ -161,6 +161,18 @@
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="@+id/textView2"
         app:layout_constraintTop_toBottomOf="@+id/windSpeedTextView" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewMain"
+        android:layout_width="0dp"
+        android:layout_height="64dp"
+        android:layout_marginTop="100dp"
+        android:background="#00FFFFFF"
+
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="@+id/imageView3"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/infoBtn" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline2"

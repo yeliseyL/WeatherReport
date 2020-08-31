@@ -83,49 +83,19 @@
         app:layout_constraintStart_toStartOf="@+id/cityNameText"
         app:layout_constraintTop_toBottomOf="@+id/checkBox" />
 
-    <Button
-        android:id="@+id/button"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerViewCity"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-        android:background="@color/colorCityButton"
-        android:text="@string/city_name"
-        android:textColor="@android:color/background_light"
-        app:layout_constraintBottom_toTopOf="@+id/button2"
+        android:layout_height="0dp"
+        android:layout_marginBottom="16dp"
+        android:background="#00FFFFFF"
+        android:orientation="vertical"
+        app:layout_constraintBottom_toTopOf="@+id/chooseCityApplyBtn"
         app:layout_constraintEnd_toStartOf="@+id/guideline3"
+        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="@+id/guideline2"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.81"
-        app:layout_constraintVertical_chainStyle="packed" />
-
-    <Button
-        android:id="@+id/button3"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginBottom="4dp"
-        android:background="@color/colorCityButton"
-        android:text="@string/third_city_button"
-        android:textColor="@android:color/background_light"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guideline3"
-        app:layout_constraintStart_toStartOf="@+id/guideline2"
-        app:layout_constraintTop_toBottomOf="@+id/button2" />
-
-    <Button
-        android:id="@+id/button2"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/colorCityButton"
-        android:text="@string/second_city_button"
-        android:layout_marginBottom="4dp"
-        android:layout_marginTop="4dp"
-        android:textColor="@android:color/background_light"
-        app:layout_constraintBottom_toTopOf="@+id/button3"
-        app:layout_constraintEnd_toStartOf="@+id/guideline3"
-        app:layout_constraintStart_toStartOf="@+id/guideline2"
-        app:layout_constraintTop_toBottomOf="@+id/button" />
+        app:layout_constraintTop_toBottomOf="@+id/checkBox2"
+        app:layout_constraintVertical_bias="1.0" />
 
     <Button
         android:id="@+id/chooseCityApplyBtn"
@@ -134,7 +104,6 @@
         android:background="@drawable/ic_baseline_check_circle_24"
         android:textColor="@android:color/secondary_text_light"
         app:layout_constraintBottom_toBottomOf="@+id/imageView4"
-        app:layout_constraintEnd_toStartOf="@+id/guideline3"
-        app:layout_constraintTop_toBottomOf="@+id/button3" />
+        app:layout_constraintEnd_toStartOf="@+id/guideline3" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

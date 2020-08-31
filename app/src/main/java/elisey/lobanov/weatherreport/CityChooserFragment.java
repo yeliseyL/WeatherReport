@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -25,6 +27,8 @@ public class CityChooserFragment extends Fragment implements Constants {
     private CheckBox showWindSpeedCheckbox;
     private CheckBox showAtmPressureCheckbox;
     private EditText cityNameEditText;
+
+    private String[] cities;
 
 
     public static CityChooserFragment create(CityChooserParcel parcel) {
@@ -58,11 +62,19 @@ public class CityChooserFragment extends Fragment implements Constants {
         showAtmPressureCheckbox = view.findViewById(R.id.checkBox2);
         cityNameEditText = view.findViewById(R.id.cityNameText);
 
+        cities = getResources().getStringArray(R.array.cities_array);
+
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
+        RecyclerView recyclerView = view.findViewById(R.id.recyclerViewCity);
+        recyclerView.setLayoutManager(layoutManager);
+        RecyclerViewAdapterCity adapter = new RecyclerViewAdapterCity(cities);
+        recyclerView.setAdapter(adapter);
+
         if (getArguments().getSerializable(FIELDS) != null) {
             cityChooserParcel = (CityChooserParcel) getArguments().getSerializable(FIELDS);
         }
         if (cityChooserParcel.getCityName() != null) {
-            cityNameEditText.setText(cityChooserParcel.getCityName());
+            cityNameEditText.setText("");
         }
         showWindSpeedCheckbox.setChecked(cityChooserParcel.isWindSpeedVisible());
         showAtmPressureCheckbox.setChecked(cityChooserParcel.isPressureVisible());
@@ -72,7 +84,9 @@ public class CityChooserFragment extends Fragment implements Constants {
         applyBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                cityChooserParcel.setCityName(cityNameEditText.getText().toString());
+                if (!cityNameEditText.getText().toString().equals("")) {
+                    cityChooserParcel.setCityName(cityNameEditText.getText().toString());
+                }
                 cityChooserParcel.setWindSpeedVisible(showWindSpeedCheckbox.isChecked());
                 cityChooserParcel.setPressureVisible(showAtmPressureCheckbox.isChecked());
 

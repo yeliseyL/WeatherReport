@@ -17,5 +17,52 @@
     <string name="atm_pressure">Pressure: 745 mm</string>
     <string name="wind_speed">Wind: 5 m/s</string>
     <string name="chooseCityApplyBtnText">Apply</string>
-
+    <string-array name="cities_array">
+        <item>Moscow</item>
+        <item>Saint-Petersburg</item>
+        <item>Rome</item>
+        <item>New-York</item>
+        <item>Tokyo</item>
+        <item>Dublin</item>
+        <item>Ekaterinburg</item>
+        <item>Novosibirsk</item>
+        <item>Sochi</item>
+        <item>Chelyabinsk</item>
+        <item>Samara</item>
+        <item>Dmitrov</item>
+        <item>Khabarovsk</item>
+        <item>Dmitrov</item>
+    </string-array>
+    <string-array name="time_array">
+        <item>12:00</item>
+        <item>13:00</item>
+        <item>14:00</item>
+        <item>15:00</item>
+        <item>16:00</item>
+        <item>17:00</item>
+        <item>18:00</item>
+        <item>19:00</item>
+        <item>20:00</item>
+        <item>21:00</item>
+        <item>22:00</item>
+        <item>23:00</item>
+        <item>00:00</item>
+        <item>01:00</item>
+    </string-array>
+    <string-array name="temp_array">
+        <item>22\u00B0</item>
+        <item>22\u00B0</item>
+        <item>24\u00B0</item>
+        <item>25\u00B0</item>
+        <item>21\u00B0</item>
+        <item>22\u00B0</item>
+        <item>20\u00B0</item>
+        <item>19\u00B0</item>
+        <item>18\u00B0</item>
+        <item>18\u00B0</item>
+        <item>16\u00B0</item>
+        <item>15\u00B0</item>
+        <item>15\u00B0</item>
+        <item>14\u00B0</item>
+    </string-array>
 </resources>
