@@ -17,6 +17,5 @@
     <string name="atm_pressure">Pressure: 745 mm</string>
     <string name="wind_speed">Wind: 5 m/s</string>
     <string name="chooseCityApplyBtnText">Apply</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
 </resources>
