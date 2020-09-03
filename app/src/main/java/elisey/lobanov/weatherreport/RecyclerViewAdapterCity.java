@@ -9,6 +9,8 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.button.MaterialButton;
+
 public class RecyclerViewAdapterCity extends RecyclerView.Adapter<RecyclerViewAdapterCity.ViewHolder> {
 
     private String[] cities;
@@ -33,6 +35,7 @@ public class RecyclerViewAdapterCity extends RecyclerView.Adapter<RecyclerViewAd
             public void onClick(View v) {
                 CityChooserParcel parcel = CityChooserParcel.getInstance();
                 parcel.setCityName(cities[position]);
+                fragmentCallback.refreshInfo(parcel);
             }
         });
     }
@@ -44,11 +47,15 @@ public class RecyclerViewAdapterCity extends RecyclerView.Adapter<RecyclerViewAd
     }
 
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView cityText;
+        MaterialButton cityText;
 
         public ViewHolder(@NonNull View itemView) {
             super(itemView);
-            cityText = itemView.findViewById(R.id.cityRecyclerTextView);
+            cityText = itemView.findViewById(R.id.cityRecyclerText);
         }
+    }
+
+    public void setFragmentCallback(FragmentCallback callback) {
+        this.fragmentCallback = callback;
     }
 }

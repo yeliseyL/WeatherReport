@@ -185,19 +185,8 @@
         android:orientation="vertical"
         app:layout_constraintGuide_percent="0.9294404" />
 
-    <Button
-        android:id="@+id/button4"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:background="#005A97B3"
-        android:text="@string/select_city_btn_text_main_act"
-        android:textColor="@android:color/secondary_text_light"
-        app:layout_constraintBottom_toBottomOf="@+id/imageView3"
-        app:layout_constraintEnd_toStartOf="@+id/guideline3"
-        app:layout_constraintStart_toStartOf="@+id/guideline2" />
-
-    <Button
+    <com.google.android.material.button.MaterialButton
+        style="@style/ButtonTheme"
         android:id="@+id/infoBtn"
         android:layout_width="30dp"
         android:layout_height="30dp"
@@ -205,5 +194,18 @@
         android:backgroundTint="#681E1E1E"
         app:layout_constraintEnd_toEndOf="@+id/textView"
         app:layout_constraintTop_toBottomOf="@+id/textView" />
+
+    <com.google.android.material.button.MaterialButton
+        style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+        android:id="@+id/button4"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:text="@string/select_city_btn_text_main_act"
+        android:textColor="@android:color/secondary_text_light"
+        app:layout_constraintBottom_toBottomOf="@+id/imageView3"
+        app:layout_constraintEnd_toStartOf="@+id/guideline3"
+        app:layout_constraintStart_toStartOf="@+id/guideline2"
+        app:cornerRadius="50dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
