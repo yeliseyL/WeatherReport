@@ -1,8 +1,8 @@
 <resources>
     <string name="app_name">WeatherReport</string>
-    <string name="city_name">Moscow</string>
-    <string name="today_degrees">20\u00B0</string>
-    <string name="forecast_today">Cloudy</string>
+    <string name="city_name"></string>
+    <string name="today_degrees"></string>
+    <string name="forecast_today"></string>
     <string name="today">Today</string>
     <string name="tomorrow">Tomorrow</string>
     <string name="today_degrees_day_night">20 / 18</string>
@@ -14,8 +14,8 @@
     <string name="second_city_button">Saint-Petersburg</string>
     <string name="third_city_button">New York</string>
     <string name="select_city_btn_text_main_act">Choose another city</string>
-    <string name="atm_pressure">Pressure: 745 mm</string>
-    <string name="wind_speed">Wind: 5 m/s</string>
+    <string name="atm_pressure"></string>
+    <string name="wind_speed"></string>
     <string name="chooseCityApplyBtnText">Apply</string>
     <string name="menu_settings">Settings</string>
     <string name="menu_info">Info</string>
@@ -23,11 +23,15 @@
     <string name="ok_button">OK</string>
     <string name="preference_key_mode">mode</string>
     <string name="night_mode">Night mode</string>
+    <string name="main_temp_string">%d%s</string>
+    <string name="degree_sign">°</string>
+    <string name="wind_string">Wind: %d m/s</string>
+    <string name="pressure_string">Pressure: %d mm</string>
     <string-array name="cities_array">
         <item>Moscow</item>
-        <item>Saint-Petersburg</item>
+        <item>Saint Petersburg</item>
         <item>Rome</item>
-        <item>New-York</item>
+        <item>New York</item>
         <item>Tokyo</item>
         <item>Dublin</item>
         <item>Ekaterinburg</item>

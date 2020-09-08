@@ -24,15 +24,16 @@ import android.widget.Toolbar;
 
 import com.google.android.material.snackbar.Snackbar;
 
+import elisey.lobanov.weatherreport.Connection.OnlineConnection;
+import elisey.lobanov.weatherreport.Connection.WeatherRequest;
+
 public class MainActivity extends AppCompatActivity implements Constants{
-    private ActionBar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         setTitle("Weather Report");
-
 
         CityChooserParcel parcel = CityChooserParcel.getInstance();
 
@@ -50,7 +51,6 @@ public class MainActivity extends AppCompatActivity implements Constants{
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        toolbar = getActionBar();
         int id = item.getItemId();
 
         switch (id) {
@@ -68,7 +68,6 @@ public class MainActivity extends AppCompatActivity implements Constants{
                         .show();
                 return true;
         }
-
         return super.onOptionsItemSelected(item);
     }
 }

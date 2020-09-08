@@ -96,7 +96,8 @@ public class CityChooserFragment extends Fragment implements Constants, Fragment
                                 .setAction("OK", new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        cityChooserParcel.setCityName(cityNameEditText.getText().toString());
+                                        String cityName = cityNameEditText.getText().toString().replaceAll("\\s", "+");
+                                        cityChooserParcel.setCityName(cityName);
                                         cityChooserParcel.setWindSpeedVisible(showWindSpeedCheckbox.isChecked());
                                         cityChooserParcel.setPressureVisible(showAtmPressureCheckbox.isChecked());
 
@@ -120,7 +121,7 @@ public class CityChooserFragment extends Fragment implements Constants, Fragment
     private boolean isValid(TextView view){
         String message = "Incorrect city name";
         String value = view.getText().toString();
-        Pattern checkCityName = Pattern.compile("^[-A-Za-z]{2,}$");
+        Pattern checkCityName = Pattern.compile("^[A-Za-z ]{2,}$");
         if (checkCityName.matcher(value).matches()){
             view.setError(null);
             return true;

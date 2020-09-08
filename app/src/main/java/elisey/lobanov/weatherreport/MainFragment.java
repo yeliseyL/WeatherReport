@@ -5,33 +5,28 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
-import java.io.FileDescriptor;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import elisey.lobanov.weatherreport.Connection.OnlineConnection;
+import elisey.lobanov.weatherreport.Connection.WeatherRequest;
 
 public class MainFragment extends Fragment implements Constants, FragmentCallback {
 
     CityChooserParcel parcel;
     private TextView cityName;
+    private TextView mainTemp;
+    private TextView description;
     private TextView windSpeedTextView;
     private TextView atmPressureTextView;
     private String cityNameText;
@@ -53,7 +48,6 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
     }
 
     @Override
@@ -75,6 +69,8 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         final Button citySelectBtn = view.findViewById(R.id.button4);
         final Button infoBtn = view.findViewById(R.id.infoBtn);
         cityName = view.findViewById(R.id.textView);
+        mainTemp = view.findViewById(R.id.textView2);
+        description = view.findViewById(R.id.textView3);
         windSpeedTextView = view.findViewById(R.id.windSpeedTextView);
         atmPressureTextView = view.findViewById(R.id.atmPressureTextView);
 
@@ -104,7 +100,6 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             });
         }
 
-
         infoBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -130,19 +125,52 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         isWindSpeedTextView = parcel.isWindSpeedVisible();
         isAtmPressureTextView = parcel.isPressureVisible();
 
-        this.cityName.setText(cityNameText);
+        final Handler handler = new Handler();
 
-        if (isWindSpeedTextView) {
-            windSpeedTextView.setVisibility(View.VISIBLE);
-        } else {
-            windSpeedTextView.setVisibility(View.GONE);
-        }
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                final WeatherRequest weatherRequest = new OnlineConnection(getContext()).getData(cityNameText);
+                handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        setValues(weatherRequest);
+                    }
+                });
+            }
+        }).start();
+    }
 
-        if (isAtmPressureTextView) {
-            atmPressureTextView.setVisibility(View.VISIBLE);
-        } else {
-            atmPressureTextView.setVisibility(View.GONE);
+    private void setValues(WeatherRequest weatherRequest) {
+
+        if (weatherRequest != null) {
+            cityName.setText(weatherRequest.getName());
+            mainTemp.setText(String.format(getResources().getString(R.string.main_temp_string),
+                    (int) weatherRequest.getMain().getTemp(), getResources().getString(R.string.degree_sign)));
+            description.setText(capitalize(weatherRequest.getWeather()[0].getDescription()));
+
+            if (isWindSpeedTextView) {
+                windSpeedTextView.setVisibility(View.VISIBLE);
+                windSpeedTextView.setText(String.format(getResources().getString(R.string.wind_string),
+                        (int) weatherRequest.getWind().getSpeed()));
+            } else {
+                windSpeedTextView.setVisibility(View.GONE);
+            }
+
+            if (isAtmPressureTextView) {
+                atmPressureTextView.setVisibility(View.VISIBLE);
+                atmPressureTextView.setText(String.format(getResources().getString(R.string.pressure_string),
+                        (int)((float) weatherRequest.getMain().getPressure() * 0.75)));
+            } else {
+                atmPressureTextView.setVisibility(View.GONE);
+            }
         }
     }
 
+    public static String capitalize(String str) {
+        if (str == null) {
+            return str;
+        }
+        return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
 }
