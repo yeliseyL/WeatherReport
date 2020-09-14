@@ -62,7 +62,7 @@ public class CityChooserFragment extends Fragment implements Constants, Fragment
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull final View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         showWindSpeedCheckbox = view.findViewById(R.id.checkBox);
@@ -136,4 +136,5 @@ public class CityChooserFragment extends Fragment implements Constants, Fragment
     public void refreshInfo(CityChooserParcel parcel) {
         cityNameEditText.setText(cityChooserParcel.getCityName());
     }
+
 }

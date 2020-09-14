@@ -164,6 +164,9 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             } else {
                 atmPressureTextView.setVisibility(View.GONE);
             }
+
+            HistoryHandler historyHandler = HistoryHandler.getInstance();
+            historyHandler.setHistoryEntry(cityName.getText().toString(), mainTemp.getText().toString());
         }
     }
 
