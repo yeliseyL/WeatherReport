@@ -5,11 +5,16 @@ import android.widget.Toast;
 
 import com.google.gson.Gson;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.stream.Collectors;
 import javax.net.ssl.HttpsURLConnection;
+
+import elisey.lobanov.weatherreport.BottomSheetErrorDialog;
 
 public class OnlineConnection {
     private Context context;
@@ -27,15 +32,14 @@ public class OnlineConnection {
             try {
                 urlConnection = (HttpsURLConnection) uri.openConnection();
                 urlConnection.setRequestMethod("GET");
-                urlConnection.setReadTimeout(10000);
+                urlConnection.setConnectTimeout(5000);
+                urlConnection.setReadTimeout(5000);
                 BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
                 String result = getLines(in);
 
                 Gson gson = new Gson();
                 wr = gson.fromJson(result, WeatherRequest.class);
-
-            } catch (Exception e) {
-//                Toast.makeText(context, "Connection error", Toast.LENGTH_LONG).show();
+            } catch (IOException e) {
                 e.printStackTrace();
             } finally {
                 if (null != urlConnection) {
@@ -43,7 +47,7 @@ public class OnlineConnection {
                 }
             }
         } catch (MalformedURLException e) {
-//            Toast.makeText(context, "Wrong URL address", Toast.LENGTH_LONG).show();
+            Toast.makeText(context, "Wrong URL address", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return wr;

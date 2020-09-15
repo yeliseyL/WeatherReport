@@ -134,6 +134,10 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
                 handler.post(new Runnable() {
                     @Override
                     public void run() {
+                        if (weatherRequest == null) {
+                            BottomSheetErrorDialog dialogFragment = BottomSheetErrorDialog.newInstance();
+                            dialogFragment.show(getActivity().getSupportFragmentManager(), "dialog_fragment");
+                        }
                         setValues(weatherRequest);
                     }
                 });

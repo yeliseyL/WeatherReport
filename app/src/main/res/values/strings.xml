@@ -34,6 +34,8 @@
     <string name="navigation_drawer_close">Close</string>
     <string name="home_item">Home</string>
     <string name="history_item">History</string>
+    <string name="connection_error">Connection error</string>
+    <string name="ok">OK</string>
     <string-array name="cities_array">
         <item>Moscow</item>
         <item>Saint Petersburg</item>
