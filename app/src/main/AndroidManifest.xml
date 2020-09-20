@@ -20,6 +20,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".connection.OnlineConnection"
+            android:exported="false" />
+        <service
+            android:name=".ServerDataHandler"
+            android:exported="false" />
+
     </application>
 
 </manifest>

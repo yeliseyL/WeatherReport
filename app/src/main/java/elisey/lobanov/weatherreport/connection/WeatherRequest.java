@@ -1,6 +1,8 @@
-package elisey.lobanov.weatherreport.Connection;
+package elisey.lobanov.weatherreport.connection;
 
-public class WeatherRequest {
+import java.io.Serializable;
+
+public class WeatherRequest implements Serializable {
     private Weather[] weather;
     private Main main;
     private Wind wind;

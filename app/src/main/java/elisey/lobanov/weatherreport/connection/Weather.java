@@ -1,4 +1,4 @@
-package elisey.lobanov.weatherreport.Connection;
+package elisey.lobanov.weatherreport.connection;
 
 public class Weather {
     private String main;

@@ -1,10 +1,9 @@
 package elisey.lobanov.weatherreport;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class HistoryHandler {
-    private static HistoryHandler instance = null;
+    private static HistoryHandler instance;
     private static final Object syncObj = new Object();
     private ArrayList<String> cities = new ArrayList<>();
     private ArrayList<String> temps = new ArrayList<>();

@@ -1,15 +1,23 @@
 package elisey.lobanov.weatherreport;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkInfo;
+import androidx.work.WorkManager;
 
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -18,8 +26,13 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
-import elisey.lobanov.weatherreport.Connection.OnlineConnection;
-import elisey.lobanov.weatherreport.Connection.WeatherRequest;
+import com.google.gson.Gson;
+
+import java.util.concurrent.ExecutionException;
+
+import elisey.lobanov.weatherreport.connection.OnlineConnection;
+import elisey.lobanov.weatherreport.ServerDataHandler;
+import elisey.lobanov.weatherreport.connection.WeatherRequest;
 
 public class MainFragment extends Fragment implements Constants, FragmentCallback {
 
@@ -33,9 +46,31 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     private boolean isWindSpeedTextView;
     private boolean isAtmPressureTextView;
     boolean isLandscapeOrientation;
+    String weatherJSON;
 
     private String[] times;
     private String[] timeTemps;
+    private BroadcastReceiver weatherReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            weatherJSON = intent.getStringExtra(WR_RESULT);
+
+            Intent dataIntent = new Intent(context, ServerDataHandler.class);
+            dataIntent.putExtra(WR_DATA, weatherJSON);
+            context.startService(dataIntent);
+        }
+    };
+    private BroadcastReceiver dataReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String parsedCityName = intent.getStringExtra(NAME);
+            int parsedMainTemp = intent.getIntExtra(TEMP, 0);
+            String parsedDescription = intent.getStringExtra(DESCRIPTION);
+            int parsedWindSpeed = intent.getIntExtra(WIND,0);
+            int parsedPressure = intent.getIntExtra(PRESSURE,0);
+            setValues(parsedCityName, parsedMainTemp, parsedDescription, parsedWindSpeed, parsedPressure);
+        }
+    };
 
     public static MainFragment create(CityChooserParcel parcel) {
         MainFragment fragment = new MainFragment();
@@ -43,6 +78,13 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         args.putSerializable(FIELDS, parcel);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getActivity().registerReceiver(weatherReceiver, new IntentFilter(BROADCAST_RESULT));
+        getActivity().registerReceiver(dataReceiver, new IntentFilter(DATA_RESULT));
     }
 
     @Override
@@ -54,7 +96,6 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
-
         parcel = (CityChooserParcel) getArguments().getSerializable(FIELDS);
 
         times = getResources().getStringArray(R.array.time_array);
@@ -125,53 +166,36 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         isWindSpeedTextView = parcel.isWindSpeedVisible();
         isAtmPressureTextView = parcel.isPressureVisible();
 
-        final Handler handler = new Handler();
-
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                final WeatherRequest weatherRequest = new OnlineConnection(getContext()).getData(cityNameText);
-                handler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (weatherRequest == null) {
-                            BottomSheetErrorDialog dialogFragment = BottomSheetErrorDialog.newInstance();
-                            dialogFragment.show(getActivity().getSupportFragmentManager(), "dialog_fragment");
-                        }
-                        setValues(weatherRequest);
-                    }
-                });
-            }
-        }).start();
+        Intent intent = new Intent(getContext(), OnlineConnection.class);
+        intent.putExtra(CITY_NAME, cityNameText);
+        getActivity().startService(intent);
     }
 
-    private void setValues(WeatherRequest weatherRequest) {
+    private void setValues(String parsedCityName, int parsedMainTemp, String parsedDescription, int parsedWindSpeed, int parsedPressure) {
 
-        if (weatherRequest != null) {
-            cityName.setText(weatherRequest.getName());
-            mainTemp.setText(String.format(getResources().getString(R.string.main_temp_string),
-                    (int) weatherRequest.getMain().getTemp(), getResources().getString(R.string.degree_sign)));
-            description.setText(capitalize(weatherRequest.getWeather()[0].getDescription()));
+        cityName.setText(parsedCityName);
+        mainTemp.setText(String.format(getResources().getString(R.string.main_temp_string),
+                parsedMainTemp, getResources().getString(R.string.degree_sign)));
+        description.setText(capitalize(parsedDescription));
 
-            if (isWindSpeedTextView) {
-                windSpeedTextView.setVisibility(View.VISIBLE);
-                windSpeedTextView.setText(String.format(getResources().getString(R.string.wind_string),
-                        (int) weatherRequest.getWind().getSpeed()));
-            } else {
-                windSpeedTextView.setVisibility(View.GONE);
-            }
-
-            if (isAtmPressureTextView) {
-                atmPressureTextView.setVisibility(View.VISIBLE);
-                atmPressureTextView.setText(String.format(getResources().getString(R.string.pressure_string),
-                        (int)((float) weatherRequest.getMain().getPressure() * 0.75)));
-            } else {
-                atmPressureTextView.setVisibility(View.GONE);
-            }
-
-            HistoryHandler historyHandler = HistoryHandler.getInstance();
-            historyHandler.setHistoryEntry(cityName.getText().toString(), mainTemp.getText().toString());
+        if (isWindSpeedTextView) {
+            windSpeedTextView.setVisibility(View.VISIBLE);
+            windSpeedTextView.setText(String.format(getResources().getString(R.string.wind_string),
+                    parsedWindSpeed));
+        } else {
+            windSpeedTextView.setVisibility(View.GONE);
         }
+
+        if (isAtmPressureTextView) {
+            atmPressureTextView.setVisibility(View.VISIBLE);
+            atmPressureTextView.setText(String.format(getResources().getString(R.string.pressure_string),
+                    parsedPressure));
+        } else {
+            atmPressureTextView.setVisibility(View.GONE);
+        }
+
+        HistoryHandler historyHandler = HistoryHandler.getInstance();
+        historyHandler.setHistoryEntry(cityName.getText().toString(), mainTemp.getText().toString());
     }
 
     public static String capitalize(String str) {
@@ -179,5 +203,12 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        getActivity().unregisterReceiver(weatherReceiver);
+        getActivity().unregisterReceiver(dataReceiver);
     }
 }

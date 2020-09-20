@@ -1,30 +1,41 @@
-package elisey.lobanov.weatherreport.Connection;
+package elisey.lobanov.weatherreport.connection;
 
+import android.app.IntentService;
 import android.content.Context;
+import android.content.Intent;
+import android.os.Parcelable;
 import android.widget.Toast;
+
+import androidx.annotation.Nullable;
 
 import com.google.gson.Gson;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.util.stream.Collectors;
 import javax.net.ssl.HttpsURLConnection;
 
-import elisey.lobanov.weatherreport.BottomSheetErrorDialog;
+import elisey.lobanov.weatherreport.Constants;
 
-public class OnlineConnection {
-    private Context context;
+public class OnlineConnection extends IntentService implements Constants {
 
-    public OnlineConnection(Context context) {
-        this.context = context;
+    public OnlineConnection() {
+        super("OnlineConnection");
     }
 
-    public WeatherRequest getData(String cityName) {
-        WeatherRequest wr = null;
+    @Override
+    protected void onHandleIntent(@Nullable Intent intent) {
+        String cityName = intent.getStringExtra(CITY_NAME);
+        String wr = getData(cityName);
+        Intent broadcastIntent = new Intent(BROADCAST_RESULT);
+        broadcastIntent.putExtra(WR_RESULT, wr);
+        sendBroadcast(broadcastIntent);
+    }
+
+    public String getData(String cityName) {
+        String wr = null;
 
         try {
             final URL uri = new URL(makeUrl(cityName));
@@ -35,10 +46,10 @@ public class OnlineConnection {
                 urlConnection.setConnectTimeout(5000);
                 urlConnection.setReadTimeout(5000);
                 BufferedReader in = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
-                String result = getLines(in);
+                wr = getLines(in);
 
-                Gson gson = new Gson();
-                wr = gson.fromJson(result, WeatherRequest.class);
+//                Gson gson = new Gson();
+//                wr = gson.fromJson(result, WeatherRequest.class);
             } catch (IOException e) {
                 e.printStackTrace();
             } finally {
@@ -47,7 +58,6 @@ public class OnlineConnection {
                 }
             }
         } catch (MalformedURLException e) {
-            Toast.makeText(context, "Wrong URL address", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return wr;
@@ -61,5 +71,6 @@ public class OnlineConnection {
     private String getLines(BufferedReader in) {
         return in.lines().collect(Collectors.joining("\n"));
     }
+
 
 }

@@ -36,6 +36,7 @@
     <string name="history_item">History</string>
     <string name="connection_error">Connection error</string>
     <string name="ok">OK</string>
+    <string name="history_title">History</string>
     <string-array name="cities_array">
         <item>Moscow</item>
         <item>Saint Petersburg</item>
