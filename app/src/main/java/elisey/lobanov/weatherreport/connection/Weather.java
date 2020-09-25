@@ -1,7 +1,14 @@
 package elisey.lobanov.weatherreport.connection;
 
+import com.google.gson.annotations.Expose;
+import com.google.gson.annotations.SerializedName;
+
 public class Weather {
+    @SerializedName("main")
+    @Expose
     private String main;
+    @SerializedName("description")
+    @Expose
     private String description;
 
     public String getDescription() {

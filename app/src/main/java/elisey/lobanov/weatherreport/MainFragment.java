@@ -14,25 +14,24 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-import androidx.work.Data;
-import androidx.work.OneTimeWorkRequest;
-import androidx.work.WorkInfo;
-import androidx.work.WorkManager;
 
-import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.google.gson.Gson;
-
-import java.util.concurrent.ExecutionException;
+import com.squareup.picasso.Picasso;
 
 import elisey.lobanov.weatherreport.connection.OnlineConnection;
-import elisey.lobanov.weatherreport.ServerDataHandler;
+import elisey.lobanov.weatherreport.connection.OpenWeather;
 import elisey.lobanov.weatherreport.connection.WeatherRequest;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MainFragment extends Fragment implements Constants, FragmentCallback {
 
@@ -47,30 +46,10 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     private boolean isAtmPressureTextView;
     boolean isLandscapeOrientation;
     String weatherJSON;
+    private OpenWeather openWeather;
 
     private String[] times;
     private String[] timeTemps;
-    private BroadcastReceiver weatherReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            weatherJSON = intent.getStringExtra(WR_RESULT);
-
-            Intent dataIntent = new Intent(context, ServerDataHandler.class);
-            dataIntent.putExtra(WR_DATA, weatherJSON);
-            context.startService(dataIntent);
-        }
-    };
-    private BroadcastReceiver dataReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String parsedCityName = intent.getStringExtra(NAME);
-            int parsedMainTemp = intent.getIntExtra(TEMP, 0);
-            String parsedDescription = intent.getStringExtra(DESCRIPTION);
-            int parsedWindSpeed = intent.getIntExtra(WIND,0);
-            int parsedPressure = intent.getIntExtra(PRESSURE,0);
-            setValues(parsedCityName, parsedMainTemp, parsedDescription, parsedWindSpeed, parsedPressure);
-        }
-    };
 
     public static MainFragment create(CityChooserParcel parcel) {
         MainFragment fragment = new MainFragment();
@@ -81,21 +60,21 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        getActivity().registerReceiver(weatherReceiver, new IntentFilter(BROADCAST_RESULT));
-        getActivity().registerReceiver(dataReceiver, new IntentFilter(DATA_RESULT));
-    }
-
-    @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        initRetorfit();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.fragment_main, container, false);
+
+        ImageView imageView = view.findViewById(R.id.imageView3);
+        Picasso.get()
+                .load("https://images.unsplash.com/photo-1499956827185-0d63ee78a910")
+                .into(imageView);
+
         parcel = (CityChooserParcel) getArguments().getSerializable(FIELDS);
 
         times = getResources().getStringArray(R.array.time_array);
@@ -166,9 +145,40 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         isWindSpeedTextView = parcel.isWindSpeedVisible();
         isAtmPressureTextView = parcel.isPressureVisible();
 
-        Intent intent = new Intent(getContext(), OnlineConnection.class);
-        intent.putExtra(CITY_NAME, cityNameText);
-        getActivity().startService(intent);
+        requestRetrofit(cityNameText);
+    }
+
+    private void initRetorfit() {
+        Retrofit retrofit;
+        retrofit = new Retrofit.Builder()
+                .baseUrl("https://api.openweathermap.org/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        openWeather = retrofit.create(OpenWeather.class);
+    }
+
+    private void requestRetrofit(String cityName) {
+        String keyApi = "bde7c62807efaf4028c2ddfd0c3d1bfe";
+        String units = "metric";
+        openWeather.loadWeather(cityName, units, keyApi)
+                .enqueue(new Callback<WeatherRequest>() {
+                    @Override
+                    public void onResponse(Call<WeatherRequest> call, Response<WeatherRequest> response) {
+                        if (response.body() != null) {
+                            String parsedCityName = response.body().getName();
+                            int parsedMainTemp = (int) response.body().getMain().getTemp();
+                            String parsedDescription = response.body().getWeather()[0].getDescription();
+                            int parsedWindSpeed = (int) response.body().getWind().getSpeed();
+                            int parsedPressure = (int)((float) response.body().getMain().getPressure() * 0.75);
+                            setValues(parsedCityName, parsedMainTemp, parsedDescription, parsedWindSpeed, parsedPressure);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<WeatherRequest> call, Throwable t) {
+                        BottomSheetErrorDialog.newInstance();
+                    }
+                });
     }
 
     private void setValues(String parsedCityName, int parsedMainTemp, String parsedDescription, int parsedWindSpeed, int parsedPressure) {
@@ -203,12 +213,5 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        getActivity().unregisterReceiver(weatherReceiver);
-        getActivity().unregisterReceiver(dataReceiver);
     }
 }

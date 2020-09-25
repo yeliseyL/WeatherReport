@@ -1,6 +1,12 @@
 apply plugin: 'com.android.application'
 
 android {
+
+    compileOptions {
+        targetCompatibility = "8"
+        sourceCompatibility = "8"
+    }
+
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
@@ -38,4 +44,7 @@ dependencies {
     implementation "androidx.preference:preference:1.0.0"
     implementation "com.google.code.gson:gson:2.8.6"
     implementation "android.arch.work:work-runtime:2.4.0"
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
+    implementation 'com.squareup.picasso:picasso:2.71828'
 }
