@@ -1,9 +1,11 @@
 package elisey.lobanov.weatherreport;
 
+import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -24,18 +26,30 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+
 import elisey.lobanov.weatherreport.connection.OnlineConnection;
 import elisey.lobanov.weatherreport.connection.OpenWeather;
 import elisey.lobanov.weatherreport.connection.WeatherRequest;
+import elisey.lobanov.weatherreport.history.HistoryDao;
+import elisey.lobanov.weatherreport.history.HistoryField;
+import elisey.lobanov.weatherreport.history.HistorySource;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static android.content.Context.MODE_PRIVATE;
+
 public class MainFragment extends Fragment implements Constants, FragmentCallback {
 
-    CityChooserParcel parcel;
+    static final String url = "https://api.openweathermap.org/";
+    static final String keyApi = "bde7c62807efaf4028c2ddfd0c3d1bfe";
+    static final String units = "metric";
+    private SharedPreferences sharedPref;
+    private CityChooserParcel parcel;
     private TextView cityName;
     private TextView mainTemp;
     private TextView description;
@@ -45,8 +59,8 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     private boolean isWindSpeedTextView;
     private boolean isAtmPressureTextView;
     boolean isLandscapeOrientation;
-    String weatherJSON;
     private OpenWeather openWeather;
+    private HistorySource historySource;
 
     private String[] times;
     private String[] timeTemps;
@@ -63,6 +77,7 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         initRetorfit();
+        sharedPref = getActivity().getPreferences(MODE_PRIVATE);
     }
 
     @Override
@@ -72,7 +87,8 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
 
         ImageView imageView = view.findViewById(R.id.imageView3);
         Picasso.get()
-                .load("https://images.unsplash.com/photo-1499956827185-0d63ee78a910")
+//                .load("https://images.unsplash.com/photo-1499956827185-0d63ee78a910")
+                .load(R.drawable.cloudy_sky_bg)
                 .into(imageView);
 
         parcel = (CityChooserParcel) getArguments().getSerializable(FIELDS);
@@ -94,7 +110,8 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         windSpeedTextView = view.findViewById(R.id.windSpeedTextView);
         atmPressureTextView = view.findViewById(R.id.atmPressureTextView);
 
-        refreshInfo(parcel);
+        loadPreferences(sharedPref);
+        requestRetrofit(cityNameText);
 
         final Fragment fragment = CityChooserFragment.create(parcel);
         ((CityChooserFragment) fragment).setFragmentCallback(this);
@@ -106,29 +123,23 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
                     .addToBackStack(null)
                     .commit();
         } else {
-            citySelectBtn.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-                    if (!isLandscapeOrientation) {
-                        ft.add(R.id.main_container, fragment);
-                        ft.addToBackStack(null);
-                        ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                        ft.commit();
-                    }
+            citySelectBtn.setOnClickListener(v -> {
+                FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+                if (!isLandscapeOrientation) {
+                    ft.add(R.id.main_container, fragment);
+                    ft.addToBackStack(null);
+                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
+                    ft.commit();
                 }
             });
         }
 
-        infoBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                final TextView cityName = view.findViewById(R.id.textView);
-                String url = String.format("https://en.wikipedia.org/wiki/%s", cityName.getText());
-                Uri uri = Uri.parse(url);
-                Intent openSite = new Intent(Intent.ACTION_VIEW, uri);
-                startActivity(openSite);
-            }
+        infoBtn.setOnClickListener(v -> {
+            final TextView cityName = view.findViewById(R.id.textView);
+            String url = String.format("https://en.wikipedia.org/wiki/%s", cityName.getText());
+            Uri uri = Uri.parse(url);
+            Intent openSite = new Intent(Intent.ACTION_VIEW, uri);
+            startActivity(openSite);
         });
         return view;
     }
@@ -151,15 +162,13 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     private void initRetorfit() {
         Retrofit retrofit;
         retrofit = new Retrofit.Builder()
-                .baseUrl("https://api.openweathermap.org/")
+                .baseUrl(url)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         openWeather = retrofit.create(OpenWeather.class);
     }
 
     private void requestRetrofit(String cityName) {
-        String keyApi = "bde7c62807efaf4028c2ddfd0c3d1bfe";
-        String units = "metric";
         openWeather.loadWeather(cityName, units, keyApi)
                 .enqueue(new Callback<WeatherRequest>() {
                     @Override
@@ -169,8 +178,9 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
                             int parsedMainTemp = (int) response.body().getMain().getTemp();
                             String parsedDescription = response.body().getWeather()[0].getDescription();
                             int parsedWindSpeed = (int) response.body().getWind().getSpeed();
-                            int parsedPressure = (int)((float) response.body().getMain().getPressure() * 0.75);
+                            int parsedPressure = (int) ((float) response.body().getMain().getPressure() * 0.75);
                             setValues(parsedCityName, parsedMainTemp, parsedDescription, parsedWindSpeed, parsedPressure);
+                            savePreferences(sharedPref);
                         }
                     }
 
@@ -181,6 +191,7 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
                 });
     }
 
+    @SuppressLint("SimpleDateFormat")
     private void setValues(String parsedCityName, int parsedMainTemp, String parsedDescription, int parsedWindSpeed, int parsedPressure) {
 
         cityName.setText(parsedCityName);
@@ -204,8 +215,49 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             atmPressureTextView.setVisibility(View.GONE);
         }
 
-        HistoryHandler historyHandler = HistoryHandler.getInstance();
-        historyHandler.setHistoryEntry(cityName.getText().toString(), mainTemp.getText().toString());
+        HistoryDao historyDao = App
+                .getInstance()
+                .getHistoryDao();
+        historySource = new HistorySource(historyDao);
+        HistoryField historyField = new HistoryField();
+        historyField.date = getDate();
+        historyField.cityName = cityName.getText().toString();
+        historyField.temp = mainTemp.getText().toString();
+        historySource.addHistoryField(historyField);
+
+    }
+
+    private void savePreferences(SharedPreferences sharedPref) {
+        SharedPreferences.Editor editor = sharedPref.edit();
+        editor.putString(CITY_NAME, cityName.getText().toString());
+        editor.putString(TEMP, mainTemp.getText().toString());
+        editor.putString(DESCRIPTION, description.getText().toString());
+        editor.putString(WIND, windSpeedTextView.getText().toString());
+        editor.putString(PRESSURE, atmPressureTextView.getText().toString());
+        editor.putBoolean(WIND_VISIBLE, isWindSpeedTextView);
+        editor.putBoolean(PRESSURE_VISIBLE, isAtmPressureTextView);
+        editor.apply();
+    }
+
+    private void loadPreferences(SharedPreferences sharedPref) {
+        cityName.setText(sharedPref.getString(CITY_NAME, ""));
+        mainTemp.setText(sharedPref.getString(TEMP, "0"));
+        description.setText(sharedPref.getString(DESCRIPTION, ""));
+
+        if (sharedPref.getBoolean(WIND_VISIBLE, false)) {
+            windSpeedTextView.setVisibility(View.VISIBLE);
+        } else {
+            windSpeedTextView.setVisibility(View.GONE);
+        }
+
+        if (sharedPref.getBoolean(PRESSURE_VISIBLE, false)) {
+            atmPressureTextView.setVisibility(View.VISIBLE);
+        } else {
+            atmPressureTextView.setVisibility(View.GONE);
+        }
+
+        windSpeedTextView.setText(sharedPref.getString(WIND, "0"));
+        atmPressureTextView.setText(sharedPref.getString(PRESSURE, "0"));
     }
 
     public static String capitalize(String str) {
@@ -213,5 +265,11 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    private String getDate() {
+        Calendar calendar = Calendar.getInstance();;
+        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy");
+        return dateFormat.format(calendar.getTime());
     }
 }

@@ -11,8 +11,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import elisey.lobanov.weatherreport.history.HistoryDao;
+import elisey.lobanov.weatherreport.history.HistorySource;
+
 public class HistoryFragment extends Fragment {
     private RecyclerViewAdapterHistory adapter;
+    private HistorySource historySource;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -28,12 +32,15 @@ public class HistoryFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        HistoryHandler historyHandler = HistoryHandler.getInstance();
+        HistoryDao historyDao = App
+                .getInstance()
+                .getHistoryDao();
+        historySource = new HistorySource(historyDao);
 
         RecyclerView recyclerView = view.findViewById(R.id.recyclerViewHistory);
         LinearLayoutManager layoutManager = new LinearLayoutManager(getContext(), LinearLayoutManager.VERTICAL, false);
         recyclerView.setLayoutManager(layoutManager);
-        adapter = new RecyclerViewAdapterHistory(historyHandler.getCities(), historyHandler.getTemps());
+        adapter = new RecyclerViewAdapterHistory(historySource);
         recyclerView.setAdapter(adapter);
     }
 }

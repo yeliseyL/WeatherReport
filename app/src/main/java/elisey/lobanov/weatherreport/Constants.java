@@ -6,6 +6,8 @@ public interface Constants {
     String TEMP = "TEMP";
     String WIND = "WIND";
     String PRESSURE = "PRESSURE";
+    String WIND_VISIBLE = "WIND_VISIBLE";
+    String PRESSURE_VISIBLE = "PRESSURE_VISIBLE";
     String DESCRIPTION = "DESCRIPTION";
     String CITY_NAME = "CITY_NAME";
     String WR_RESULT = "WEATHER_RESULT";
