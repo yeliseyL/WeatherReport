@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "718513894946",
+    "firebase_url": "https://weatherreport-caeb1.firebaseio.com",
+    "project_id": "weatherreport-caeb1",
+    "storage_bucket": "weatherreport-caeb1.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:718513894946:android:36136ffbcbe279cf967c7b",
+        "android_client_info": {
+          "package_name": "elisey.lobanov.weatherreport"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "718513894946-4f7oc9p86un0051dq47brmuc57j94sft.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCK_oFiUiF8qdG94vORXBxwbQhZfd5IpaI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "718513894946-4f7oc9p86un0051dq47brmuc57j94sft.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

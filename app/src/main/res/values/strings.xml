@@ -37,6 +37,9 @@
     <string name="connection_error">Connection error</string>
     <string name="ok">OK</string>
     <string name="history_title">History</string>
+    <string name="connection_lost">NO CONNECTION</string>
+    <string name="battery_low">BATTERY LOW</string>
+    <string name="weather_warning">Weather Warning</string>
     <string-array name="cities_array">
         <item>Moscow</item>
         <item>Saint Petersburg</item>

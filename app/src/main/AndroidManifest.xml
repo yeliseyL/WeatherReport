@@ -3,6 +3,7 @@
     package="elisey.lobanov.weatherreport">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".App"
@@ -12,6 +13,13 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+        <service
+            android:name=".WeatherFirebaseMessagingService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme.ActionBar.Transparent">
@@ -28,7 +36,6 @@
         <service
             android:name=".ServerDataHandler"
             android:exported="false" />
-
     </application>
 
 </manifest>

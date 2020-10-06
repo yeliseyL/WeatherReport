@@ -9,22 +9,40 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
+import android.os.BatteryManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.navigation.NavigationView;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 public class MainActivity extends AppCompatActivity implements Constants, NavigationView.OnNavigationItemSelectedListener{
     private ActionBarDrawerToggle toggle;
     private DrawerLayout drawer;
     private CityChooserParcel parcel;
+    private BroadcastReceiver NetworkStatusReciever;
+    private BroadcastReceiver BatteryLevelReciever;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.navigation_drawer_layout);
         setTitle("Weather Report");
+
+        initBroadcastRecievers();
 
         drawer = (DrawerLayout) findViewById(R.id.nav_drawer_layout);
         toggle = new ActionBarDrawerToggle(
@@ -112,7 +130,38 @@ public class MainActivity extends AppCompatActivity implements Constants, Naviga
         return true;
     }
 
+    private void initBroadcastRecievers() {
+        NetworkStatusReciever = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                ConnectivityManager connMgr = (ConnectivityManager)
+                        getSystemService(Context.CONNECTIVITY_SERVICE);
+                NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
+                if (networkInfo != null && networkInfo.isConnectedOrConnecting()) {
+                    return;
+                } else {
+                    Toast.makeText(context, R.string.connection_lost, Toast.LENGTH_LONG).show();
+                }
+            }
+        };
+        registerReceiver(NetworkStatusReciever, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
 
+        BatteryLevelReciever = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1);
+                if (level < 10) {
+                    Toast.makeText(context, R.string.battery_low, Toast.LENGTH_LONG).show();
+                }
+            }
+        };
+        registerReceiver(BatteryLevelReciever, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
+    }
 
-
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(NetworkStatusReciever);
+        unregisterReceiver(BatteryLevelReciever);
+    }
 }
