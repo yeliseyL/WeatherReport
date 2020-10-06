@@ -14,4 +14,6 @@ public interface Constants {
     String WR_DATA = "WR_DATA";
     String BROADCAST_RESULT = "BROADCAST_RESULT";
     String DATA_RESULT = "DATA_RESULT";
+    String LATITUDE = "LATITUDE";
+    String LONGITUDE = "LONGITUDE";
 }

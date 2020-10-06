@@ -1,6 +1,7 @@
 package elisey.lobanov.weatherreport;
 
 import android.annotation.SuppressLint;
+import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -12,6 +13,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -64,6 +66,7 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
 
     private String[] times;
     private String[] timeTemps;
+    private int messageId = 0;
 
     public static MainFragment create(CityChooserParcel parcel) {
         MainFragment fragment = new MainFragment();
@@ -111,7 +114,9 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         atmPressureTextView = view.findViewById(R.id.atmPressureTextView);
 
         loadPreferences(sharedPref);
-        requestRetrofit(cityNameText);
+        String latitude = sharedPref.getString(LATITUDE, "0");
+        String longitude = sharedPref.getString(LONGITUDE, "0");
+        requestRetrofit(latitude, longitude);
 
         final Fragment fragment = CityChooserFragment.create(parcel);
         ((CityChooserFragment) fragment).setFragmentCallback(this);
@@ -170,6 +175,42 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
 
     private void requestRetrofit(String cityName) {
         openWeather.loadWeather(cityName, units, keyApi)
+                .enqueue(new Callback<WeatherRequest>() {
+                    @Override
+                    public void onResponse(Call<WeatherRequest> call, Response<WeatherRequest> response) {
+                        if (response.body() != null) {
+                            String parsedCityName = response.body().getName();
+                            int parsedMainTemp = (int) response.body().getMain().getTemp();
+                            String parsedDescription = response.body().getWeather()[0].getDescription();
+                            int parsedWindSpeed = (int) response.body().getWind().getSpeed();
+                            if (parsedWindSpeed > 15) {
+                                stormWarning(parsedWindSpeed);
+                            }
+                            int parsedPressure = (int) ((float) response.body().getMain().getPressure() * 0.75);
+                            setValues(parsedCityName, parsedMainTemp, parsedDescription, parsedWindSpeed, parsedPressure);
+                            savePreferences(sharedPref);
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<WeatherRequest> call, Throwable t) {
+                        BottomSheetErrorDialog.newInstance();
+                    }
+                });
+    }
+
+    private void stormWarning(int windSpeed) {
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getContext(), "2")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle(getString(R.string.weather_warning))
+                .setContentText("Attention! Wind speed is " + windSpeed);
+        NotificationManager notificationManager =
+                (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+        notificationManager.notify(messageId++, builder.build());
+    }
+
+    private void requestRetrofit(String latitude, String longitude) {
+        openWeather.loadWeather(latitude, longitude, units, keyApi)
                 .enqueue(new Callback<WeatherRequest>() {
                     @Override
                     public void onResponse(Call<WeatherRequest> call, Response<WeatherRequest> response) {
