@@ -1,5 +1,6 @@
 package elisey.lobanov.weatherreport;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.NotificationManager;
 import android.content.BroadcastReceiver;
@@ -7,18 +8,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.location.Criteria;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.net.Uri;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentTransaction;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,10 +34,18 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
+import com.google.android.material.button.MaterialButton;
 import com.squareup.picasso.Picasso;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.concurrent.Executor;
 
 import elisey.lobanov.weatherreport.connection.OnlineConnection;
 import elisey.lobanov.weatherreport.connection.OpenWeather;
@@ -43,6 +59,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
+import static android.content.Context.LOCATION_SERVICE;
 import static android.content.Context.MODE_PRIVATE;
 
 public class MainFragment extends Fragment implements Constants, FragmentCallback {
@@ -57,12 +74,20 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     private TextView description;
     private TextView windSpeedTextView;
     private TextView atmPressureTextView;
+    TextView token;
     private String cityNameText;
     private boolean isWindSpeedTextView;
     private boolean isAtmPressureTextView;
     boolean isLandscapeOrientation;
     private OpenWeather openWeather;
     private HistorySource historySource;
+    private static final int RC_SIGN_IN = 40404;
+    private static final String TAG = "GoogleAuth";
+    private static final int PERMISSION_REQUEST_CODE = 10;
+
+    private GoogleSignInClient googleSignInClient;
+    private com.google.android.gms.common.SignInButton buttonSignIn;
+    private MaterialButton buttonSignOut;
 
     private String[] times;
     private String[] timeTemps;
@@ -79,8 +104,9 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        initRetorfit();
         sharedPref = getActivity().getPreferences(MODE_PRIVATE);
+        initRetorfit();
+        requestPermissions();
     }
 
     @Override
@@ -107,37 +133,34 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
 
         final Button citySelectBtn = view.findViewById(R.id.button4);
         final Button infoBtn = view.findViewById(R.id.infoBtn);
+        final Button getLocalWeatherBtn = view.findViewById(R.id.getLocalWeather);
         cityName = view.findViewById(R.id.textView);
         mainTemp = view.findViewById(R.id.textView2);
         description = view.findViewById(R.id.textView3);
         windSpeedTextView = view.findViewById(R.id.windSpeedTextView);
         atmPressureTextView = view.findViewById(R.id.atmPressureTextView);
 
-        loadPreferences(sharedPref);
-        String latitude = sharedPref.getString(LATITUDE, "0");
-        String longitude = sharedPref.getString(LONGITUDE, "0");
-        requestRetrofit(latitude, longitude);
+        buttonSignIn = view.findViewById(R.id.sign_in_button);
+        buttonSignOut = view.findViewById(R.id.sing_out_button);
+        token = view.findViewById(R.id.token);
 
-        final Fragment fragment = CityChooserFragment.create(parcel);
-        ((CityChooserFragment) fragment).setFragmentCallback(this);
-
-        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            citySelectBtn.setVisibility(View.GONE);
-            FragmentTransaction fragmentTransaction = getActivity().getSupportFragmentManager().beginTransaction();
-            fragmentTransaction.replace(R.id.city_chooser_container, fragment)
-                    .addToBackStack(null)
-                    .commit();
-        } else {
-            citySelectBtn.setOnClickListener(v -> {
-                FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-                if (!isLandscapeOrientation) {
-                    ft.add(R.id.main_container, fragment);
-                    ft.addToBackStack(null);
-                    ft.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE);
-                    ft.commit();
-                }
-            });
+        googleAuthInit();
+        enableSign();
+        GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(getContext());
+        if (account != null) {
+            disableSign();
+            updateUI(account.getEmail());
         }
+
+        loadPreferences(sharedPref);
+        requestRetrofit(cityNameText);
+
+        getLocalWeatherBtn.setOnClickListener(v -> {
+            getAndSaveCoordinates();
+            String latitude = sharedPref.getString(LATITUDE, "0");
+            String longitude = sharedPref.getString(LONGITUDE, "0");
+            requestRetrofit(latitude, longitude);
+        });
 
         infoBtn.setOnClickListener(v -> {
             final TextView cityName = view.findViewById(R.id.textView);
@@ -147,6 +170,136 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
             startActivity(openSite);
         });
         return view;
+    }
+
+    private void requestPermissions() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                || ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            getAndSaveCoordinates();
+        } else {
+            requestLocationPermissions();
+        }
+    }
+
+    private void requestLocationPermissions() {
+        if (!ActivityCompat.shouldShowRequestPermissionRationale(getActivity(), Manifest.permission.CALL_PHONE)) {
+            ActivityCompat.requestPermissions(getActivity(),
+                    new String[]{
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_FINE_LOCATION
+                    },
+                    PERMISSION_REQUEST_CODE);
+        }
+    }
+
+    private void getAndSaveCoordinates() {
+
+        SharedPreferences.Editor editor = sharedPref.edit();
+
+        LocationManager locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
+        Criteria criteria = new Criteria();
+        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
+        String provider = locationManager.getBestProvider(criteria, true);
+
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
+
+        locationManager.requestLocationUpdates(provider, 100000, 10, new LocationListener() {
+            @Override
+            public void onLocationChanged(Location location) {
+                String latitude = Double.toString(location.getLatitude());
+                String longitude = Double.toString(location.getLongitude());
+                editor.putString(LATITUDE, latitude);
+                editor.putString(LONGITUDE, longitude);
+                editor.apply();
+            }
+
+            @Override
+            public void onStatusChanged(String provider, int status, Bundle extras) {
+            }
+
+            @Override
+            public void onProviderEnabled(String provider) {
+            }
+
+            @Override
+            public void onProviderDisabled(String provider) {
+            }
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            if (grantResults.length == 2 &&
+                    (grantResults[0] == PackageManager.PERMISSION_GRANTED || grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
+                getAndSaveCoordinates();
+            }
+        }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == RC_SIGN_IN) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            handleSignInResult(task);
+        }
+    }
+
+    private void signIn() {
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, RC_SIGN_IN);
+    }
+
+    private void signOut() {
+        googleSignInClient.signOut()
+                .addOnCompleteListener((Executor) this, task -> {
+                    updateUI("email");
+                    enableSign();
+                });
+    }
+
+    private void googleAuthInit() {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestEmail()
+                .build();
+
+        googleSignInClient = GoogleSignIn.getClient(getContext(), gso);
+        buttonSignIn.setOnClickListener(v -> signIn()
+        );
+        buttonSignOut.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                signOut();
+            }
+        });
+    }
+
+    private void handleSignInResult(Task<GoogleSignInAccount> completedTask) {
+        try {
+            GoogleSignInAccount account = completedTask.getResult(ApiException.class);
+            disableSign();
+            updateUI(account.getEmail());
+        } catch (ApiException e) {
+            Log.w(TAG, "signInResult:failed code=" + e.getStatusCode());
+        }
+    }
+
+    private void updateUI(String idToken) {
+        token.setText(idToken);
+    }
+
+    private void enableSign(){
+        buttonSignIn.setEnabled(true);
+        buttonSignOut.setEnabled(false);
+    }
+
+    private void disableSign(){
+        buttonSignIn.setEnabled(false);
+        buttonSignOut.setEnabled(true);
     }
 
     @Override
@@ -255,6 +408,7 @@ public class MainFragment extends Fragment implements Constants, FragmentCallbac
         } else {
             atmPressureTextView.setVisibility(View.GONE);
         }
+        parcel.setCityName(parsedCityName);
 
         HistoryDao historyDao = App
                 .getInstance()
