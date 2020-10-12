@@ -1,6 +1,7 @@
 package elisey.lobanov.weatherreport;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -28,10 +29,19 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
@@ -39,14 +49,15 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.security.Provider;
 
-public class MainActivity extends AppCompatActivity implements Constants, NavigationView.OnNavigationItemSelectedListener {
+public class MainActivity extends AppCompatActivity implements Constants, NavigationView.OnNavigationItemSelectedListener, FragmentCallback {
     private ActionBarDrawerToggle toggle;
     private DrawerLayout drawer;
     private CityChooserParcel parcel;
     private BroadcastReceiver NetworkStatusReciever;
     private BroadcastReceiver BatteryLevelReciever;
     private SharedPreferences sharedPref;
-    private static final int PERMISSION_REQUEST_CODE = 10;
+    private MainFragment fragmentMain;
+
 
 
     @Override
@@ -67,14 +78,13 @@ public class MainActivity extends AppCompatActivity implements Constants, Naviga
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        requestPemissions();
-
         parcel = CityChooserParcel.getInstance();
 
-        Fragment fragmentMain = MainFragment.create(parcel);
+        fragmentMain = MainFragment.create(parcel);
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
         fragmentTransaction.replace(R.id.main_container, fragmentMain)
                 .commit();
+
 
     }
 
@@ -121,6 +131,18 @@ public class MainActivity extends AppCompatActivity implements Constants, Naviga
                 Fragment fragmentMain = MainFragment.create(parcel);
                 FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
                 fragmentTransaction.replace(R.id.main_container, fragmentMain)
+                        .commit();
+                drawer.closeDrawer(GravityCompat.START);
+                return true;
+            case R.id.search_city:
+                parcel = CityChooserParcel.getInstance();
+
+                Fragment fragment = CityChooserFragment.create(parcel);
+                ((CityChooserFragment) fragment).setFragmentCallback(this);
+                FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+                ft.replace(R.id.main_container, fragment)
+                        .addToBackStack(null)
+                        .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                         .commit();
                 drawer.closeDrawer(GravityCompat.START);
                 return true;
@@ -173,80 +195,17 @@ public class MainActivity extends AppCompatActivity implements Constants, Naviga
         registerReceiver(BatteryLevelReciever, new IntentFilter(Intent.ACTION_BATTERY_CHANGED));
     }
 
-    private void requestPemissions() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            getAndSaveCoordinates();
-        } else {
-            requestLocationPermissions();
-        }
-    }
 
-    private void requestLocationPermissions() {
-        if (!ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CALL_PHONE)) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                    },
-                    PERMISSION_REQUEST_CODE);
-        }
-    }
-
-    private void getAndSaveCoordinates() {
-
-
-        sharedPref = getPreferences(MODE_PRIVATE);
-        SharedPreferences.Editor editor = sharedPref.edit();
-
-        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        Criteria criteria = new Criteria();
-        criteria.setAccuracy(Criteria.ACCURACY_COARSE);
-        String provider = locationManager.getBestProvider(criteria, true);
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-
-        locationManager.requestLocationUpdates(provider, 100000, 10, new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                String latitude = Double.toString(location.getLatitude());
-                String longitude = Double.toString(location.getLongitude());
-                editor.putString(LATITUDE, latitude);
-                editor.putString(LONGITUDE, longitude);
-                editor.apply();
-            }
-
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-
-            @Override
-            public void onProviderEnabled(String provider) {}
-
-            @Override
-            public void onProviderDisabled(String provider) {}
-        });
-
-
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_CODE) {
-            if (grantResults.length == 2 &&
-                    (grantResults[0] == PackageManager.PERMISSION_GRANTED || grantResults[1] == PackageManager.PERMISSION_GRANTED)) {
-                getAndSaveCoordinates();
-            }
-        }
-
-    }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(NetworkStatusReciever);
         unregisterReceiver(BatteryLevelReciever);
+    }
+
+    @Override
+    public void refreshInfo(CityChooserParcel parcel) {
+        fragmentMain.refreshInfo(parcel);
     }
 }

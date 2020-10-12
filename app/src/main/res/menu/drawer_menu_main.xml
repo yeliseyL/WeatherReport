@@ -8,6 +8,9 @@
             android:id="@+id/home_item"
             android:title="@string/home_item" />
         <item
+            android:id="@+id/search_city"
+            android:title="@string/search_city" />
+        <item
             android:id="@+id/history_item"
             android:title="@string/history_item" />
         <item

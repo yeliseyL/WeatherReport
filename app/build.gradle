@@ -27,6 +27,19 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+    flavorDimensions 'location'
+    productFlavors {
+        withLocation {
+            dimension 'location'
+            versionNameSuffix '.withLoc'
+            applicationIdSuffix = '.withLoc'
+        }
+        withoutLocation {
+            dimension 'location'
+            versionNameSuffix '.withoutLoc'
+            applicationIdSuffix = '.withoutLoc'
+        }
+    }
 
 }
 
@@ -51,4 +64,5 @@ dependencies {
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation "androidx.room:room-runtime:2.2.5"
     annotationProcessor "androidx.room:room-compiler:2.2.5"
+    implementation 'com.google.android.gms:play-services-auth:18.1.0'
 }

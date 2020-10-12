@@ -17,6 +17,7 @@
         android:fitsSystemWindows="true"
         app:headerLayout="@layout/navigation_header_main"
         app:menu="@menu/drawer_menu_main"
+        app:itemTextColor="@color/drawable_selector_drawer_item"
         android:background="@drawable/gradient_city_selection_activity"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>

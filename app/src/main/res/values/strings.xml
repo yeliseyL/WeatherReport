@@ -40,6 +40,8 @@
     <string name="connection_lost">NO CONNECTION</string>
     <string name="battery_low">BATTERY LOW</string>
     <string name="weather_warning">Weather Warning</string>
+    <string name="sign_out">Sign out</string>
+    <string name="search_city">Search city</string>
     <string-array name="cities_array">
         <item>Moscow</item>
         <item>Saint Petersburg</item>
